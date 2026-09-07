@@ -1,70 +1,75 @@
 import java.sql.*;
 import java.util.Scanner;
 
-public class SecureLogin {
-
+public class SecureLogin{
     public static void main(String[] args) {
-
         String url = "jdbc:mysql://localhost:3306/movie_db";
+        // MySQL 사용자 계정
         String user = "root";
+        // MySQL 비밀번호
         String password = "sql12345";
-
-        Scanner scanner = new Scanner(System.in);
-
+        Scanner scanner =new Scanner(System.in);
         try {
-
-            Connection conn = DriverManager.getConnection(url, user, password);
+            Connection conn =
+                    DriverManager.getConnection(url, user, password);
 
             System.out.println("[영화관 회원 로그인]");
 
-            System.out.print("아이디: ");
+            System.out.print("아이디:");
             String inputId = scanner.nextLine();
 
-            System.out.print("비밀번호: ");
+            System.out.print("비밀번호:");
             String inputPass = scanner.nextLine();
 
-            String sql = "select user_id, m_name, m_id, m_role " +
-                         "from member " +
-                         "where user_id = ? "+
-                         "and user_password = ?";
+            String sql =
+                    "select m_id, user_id, m_name, m_role, " +
+                            "user_password_hash, password_salt " +
+                            "from member " +
+                            "where user_id = ? ";
 
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(sql);
 
-            // 첫 번째 ?에 아이디 입력
-            pstmt.setString(1, inputId);
+            //첫번째 ? 에 아이디 입력
+            stmt.setString(1, inputId);
 
-            // 두 번째 ?에 비밀번호 입력
-            pstmt.setString(2,inputPass);
-
-            System.out.println("실행할 SQL문");
+            System.out.println("\n 실행할 sql문");
             System.out.println(sql);
+            ResultSet rs = stmt.executeQuery();
 
-            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                String saveHash = rs.getString("user_password_hash");
+                String saveSalt = rs.getString("password_salt");
 
-            if(rs.next()) {
-
-                // sql의 결과 중 필요한 것만 java의 변수로 옮겨와야 함
-                String memberName = rs.getString("m_name");
-                String memberRole = rs.getString("m_role");
-
-                System.out.println("\n로그인 성공");
-                System.out.println(memberName + "님, 환영합니다.");
-                System.out.println("회원 권한: " + memberRole);
-            } else {
-
-                System.out.println("아이디 혹은 비밀번호가 옳지 않습니다.");
+                boolean passwordCorrect =
+                        PasswordUtil.verifyPassword(
+                                inputPass, saveSalt, saveHash);
+                if (passwordCorrect) {
+                    System.out.println("테스트");
+                    String memberName = rs.getString("m_name");
+                    String memberRole = rs.getString("m_role");
+                    System.out.println("\n로그인 성공!!");
+                    System.out.println(memberName + "님 환영합니다");
+                    System.out.println("회원권한:" + memberRole);
+                } else {
+                    System.out.println("아이디나 비밀번호가 틀렸습니다");
+                }
+                rs.close();
+                stmt.close();
+                conn.close();
             }
+        }
+        catch (SQLException e) {
+            System.out.println(
+                    "데이터베이스 오류가 발생했습니다.");
+            System.out.println(e.getMessage());
+        }
+        catch (Exception e) {
+            System.out.println(
+                    "비밀번호 확인 오류 발생했습니다.");
+            System.out.println(e.getMessage());
+        }
 
-            rs.close();
-            pstmt.close();
-            conn.close();
-        } catch (SQLException e) {
-
-            System.out.println("MySQL 연셜 실패");
-
-            System.out.println("오류 내용: " + e.getMessage());
-        } finally {
-
+        finally{
             scanner.close();
         }
     }

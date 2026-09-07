@@ -63,6 +63,11 @@ public class MemberInsert {
             System.out.println("MySQL 연셜 실패");
 
             System.out.println("오류 내용: " + e.getMessage());
+        } catch(Exception e) {
+
+            System.out.println("비밀번호 오류");
+
+            System.out.println("오류 내용: " + e.getMessage());
         } finally {
 
             scanner.close();
