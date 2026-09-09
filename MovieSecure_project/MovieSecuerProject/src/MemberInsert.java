@@ -1,76 +1,75 @@
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class MemberInsert {
 
-    public static void main(String[] args) {
+    // 회원가입 기능을 실행하는 메서드
+    public static void register(Scanner scanner) {
 
-        String url = "jdbc:mysql://localhost:3306/movie_db";
-        String user = "root";
-        String password = "sql12345";
+        System.out.println("\n[영화관 회원가입]");
 
-        Scanner scanner = new Scanner(System.in);
+        System.out.print("아이디: ");
+        String inputId = scanner.nextLine().trim();
+
+        System.out.print("비밀번호: ");
+        String inputPassword = scanner.nextLine();
+
+        System.out.print("이름: ");
+        String inputName = scanner.nextLine().trim();
+
+        // 빈 입력값 검사
+        if (inputId.isEmpty() || inputPassword.isEmpty() || inputName.isEmpty()) {
+            System.out.println("아이디, 비밀번호, 이름을 모두 입력하세요.");
+            return;
+        }
 
         try {
+            // movie_app 계정으로 DB 연결
+            Connection conn = DBConnection.getConnection();
 
-            Connection conn = DriverManager.getConnection(url, user, password);
+            // 회원마다 새로운 솔트 생성
+            String salt = PasswordUtil.generateSalt();
 
-            System.out.println("[영화관 회원 가입]");
+            // 평문 비밀번호를 PBKDF2 해시로 변환
+            String passwordHash = PasswordUtil.hashPassword(inputPassword, salt);
 
-            System.out.print("아이디: ");
-            String inputId = scanner.nextLine();
+            // 평문 비밀번호는 저장하지 않음
+            String sql = "INSERT INTO member (user_id, m_name, user_password_hash, password_salt) VALUES (?, ?, ?, ?)";
 
-            System.out.print("비밀번호: ");
-            String inputPass = scanner.nextLine();
+            PreparedStatement stmt = conn.prepareStatement(sql);
 
-            System.out.print("이름: ");
-            String inputName = scanner.nextLine();
+            stmt.setString(1, inputId);
+            stmt.setString(2, inputName);
+            stmt.setString(3, passwordHash);
+            stmt.setString(4, salt);
 
-            System.out.print("회원권한: ");
-            String inputRole = scanner.nextLine();
+            int result = stmt.executeUpdate();
 
-            String sql = "insert into member (user_id, user_password, m_name, m_role) " +
-                         "values (?, ?, ?, ?) ";
-
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-
-            // 첫 번째 ?에 아이디 입력
-            pstmt.setString(1, inputId);
-
-            // 두 번째 ?에 비밀번호 입력
-            pstmt.setString(2,inputPass);
-
-            pstmt.setString(3,inputName);
-
-            pstmt.setString(4,inputRole);
-
-            System.out.println("실행할 SQL문");
-            System.out.println(sql);
-
-            int count = pstmt.executeUpdate();
-            if(count > 0) {
-
-                System.out.println("\n가입 성공");
+            if (result == 1) {
+                System.out.println("\n회원가입 성공!");
+                System.out.println(inputName + "님의 정보가 저장되었습니다.");
             } else {
-
-                System.out.println("형식에 맞지 않는 기입이 있습니다.");
+                System.out.println("\n회원가입에 실패했습니다.");
             }
 
-            pstmt.close();
+            stmt.close();
             conn.close();
-        } catch(SQLException e) {
 
-            System.out.println("MySQL 연셜 실패");
+        } catch (SQLException e) {
+            System.out.println("데이터베이스 오류가 발생했습니다.");
 
+            // 중복 아이디 오류 확인
+            if (e.getErrorCode() == 1062) {
+                System.out.println("이미 사용 중인 아이디입니다.");
+            } else {
+                System.out.println("오류 내용: " + e.getMessage());
+            }
+
+        } catch (Exception e) {
+            System.out.println("비밀번호 처리 중 오류가 발생했습니다.");
             System.out.println("오류 내용: " + e.getMessage());
-        } catch(Exception e) {
-
-            System.out.println("비밀번호 오류");
-
-            System.out.println("오류 내용: " + e.getMessage());
-        } finally {
-
-            scanner.close();
         }
     }
 }
