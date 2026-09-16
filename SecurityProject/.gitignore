@@ -12,6 +12,7 @@
 !*.sql
 !*.txt
 !*.jar
+!*.hwp
 !**/read.md
 !**/README.md
 !.gitignore
