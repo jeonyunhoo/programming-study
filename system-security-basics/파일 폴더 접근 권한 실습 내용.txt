@@ -1,0 +1,31 @@
+1. 목적
+읽기와 쓰기 권한을 구분하고, 필요한 권한만 부여함.
+
+2.흐름
+파일 만들기 → 권한 백업 → 쓰기·추가 거부 → 확인 → 복구
+
+3.명령어
+일반 cmd에서 실행함. 사용자 이름은 whoami 결과로 바꿈.
+* icacls: 접근권한 관리 명령어
+mkdir "%USERPROFILE%\security-permission-lab"
+cd /d "%USERPROFILE%\security-permission-lab"
+echo Practice. > practice.txt
+icacls practice.txt /save permissions-backup.txt
+whoami
+icacls practice.txt /deny "컴퓨터이름\사용자이름:(WD,AD)" -> 쓰기, 추가 권한 거부
+type practice.txt
+echo Test. >> practice.txt -> 실패(권한 부족)
+
+4. 결과
+- type: 읽기 성공
+- >>: 내용 추가 거부
+- WD: 내용 쓰기 / AD: 내용 추가
+
+5. 복구
+icacls . /restore permissions-backup.txt -> 권한 복구(관리자에서 실행)
+
+참고)복구 권한 오류가 나면 관리자 cmd에서 원래 실습 폴더로
+이동하여 다시 실행함. 정상 처리 1개, 실패 0개를 확인함.
+복구 후 일반 cmd에서 내용 추가가 되는지 확인함.
+
+

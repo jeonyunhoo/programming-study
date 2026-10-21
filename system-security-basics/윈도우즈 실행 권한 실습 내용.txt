@@ -1,0 +1,28 @@
+[실습 흐름]
+
+1. 일반 cmd 실행
+2. 명령어 입력
+* whoami는 사용자 이름을 확인하는 것
+   whoami /groups | findstr "S-1-16"
+3. Medium이 표시되는지 확인
+4. cmd를 관리자 권한으로 실행
+5. 같은 명령어 입력
+6. High가 표시되는지 비교
+
+[결과 읽기]
+
+Mandatory Label\Medium Mandatory Level  레이블  S-1-16-8192
+
+- Mandatory Label: Windows가 붙인 보안 이름표
+- Medium Mandatory Level: 일반 실행에서 보통 나오는 수준
+- 레이블: 보안 수준을 표시하는 항목이라는 뜻
+- S-1-16-8192: Medium 수준의 식별 번호
+
+[핵심 요약]
+
+- 일반 실행: 보통 Medium / S-1-16-8192.
+- 관리자 실행: 보통 High / S-1-16-12288.
+- 같은 계정이어도 실행 방식에 따라 권한이 달라질 수 있음.
+- Medium이라고 일반 사용자 계정이라고 단정할 수 없음.
+- 관리자 계정에서도 일반 실행하면 Medium이 나올 수 있음.
+- 실제 파일 접근 여부는 파일 권한 등도 함께 적용됨.
